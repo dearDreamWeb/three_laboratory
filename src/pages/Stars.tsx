@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useEffect, useRef, useCallback } from 'react'
 import styles from '../app.module.less'
 import {
   Scene, PerspectiveCamera, WebGLRenderer, Mesh, BufferGeometry,
@@ -39,63 +39,6 @@ function Stars() {
   }, [render, body])
 
   /**
-   * 创建 meshBasic 材质立方体
-   */
-  const createRect = useCallback((x, y, z, color) => {
-    const width = Math.random() * 5;
-    const geometry = new BoxBufferGeometry(width, width, width);
-    const arr = [];
-    for (let i = 0; i < 6; i++) {
-      const meshBasicMater = new MeshBasicMaterial({ color });
-      arr.push(meshBasicMater)
-    }
-    const mesh = new Mesh(geometry, arr);
-    mesh.castShadow = true;
-    mesh.position.set(x, y, z);
-    scene.add(mesh);
-    meshes.push(mesh);
-  }, [])
-
-  /**
-   * 创建 line 材质立方体
-   */
-  const createLine = useCallback((x, y, z) => {
-    const lineMater = new LineBasicMaterial({ vertexColors: true });
-    const geometry = new BufferGeometry();
-    const vertices = [];
-    const colors = [];
-    const width = Math.random() * 5;
-    for (let i = 0; i < 1000; i++) {
-      const x = Math.random() * width - width * 0.5;
-      const y = Math.random() * width - width * 0.5;
-      const z = Math.random() * width - width * 0.5;
-      vertices.push(x, y, z);
-      colors.push(Math.random(), Math.random(), Math.random());
-    }
-    geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3))
-    geometry.setAttribute('color', new BufferAttribute(new Float32Array(colors), 3))
-    const mesh = new Line(geometry, lineMater);
-    mesh.castShadow = true;
-    mesh.position.set(x, y, z);
-    scene.add(mesh);
-    meshes.push(mesh);
-  }, [])
-
-  /**
-   * 创建 phong 材质立方体
-   */
-  const createLambert = useCallback((x, y, z, color) => {
-    const width = Math.random() * 5;
-    const geometry = new BoxBufferGeometry(width, width, width);
-    const meshBasicMater = new MeshLambertMaterial({ color });
-    const mesh = new Mesh(geometry, meshBasicMater);
-    mesh.castShadow = true;
-    mesh.position.set(x, y, z);
-    scene.add(mesh);
-    meshes.push(mesh);
-  }, [])
-
-  /**
    * 创建灯光
    */
   const createLight = useCallback(() => {
@@ -107,28 +50,6 @@ function Stars() {
     dirLight.shadow.mapSize.height = 1024;
     scene.add(dirLight, pointLight);
     lights.push(dirLight, pointLight);
-  }, [])
-
-  const renderScene = useCallback(() => {
-    render.render(scene, camera);
-    meshes.forEach((item) => {
-      item.rotation.x += 0.5 / 180 * Math.PI;
-      item.rotation.y += 0.5 / 180 * Math.PI;
-    })
-    raf.current = window.requestAnimationFrame(() => renderScene());
-  }, [render])
-
-  /**
-   * 创建地板
-   */
-  const createFloor = useCallback(() => {
-    const meshBasicMater = new MeshLambertMaterial({ color: '#ffffff' });
-    const plane = new PlaneGeometry(60, 60);
-    const mesh = new Mesh(plane, meshBasicMater);
-    mesh.receiveShadow = true;
-    mesh.position.set(0, -4, 0);
-    mesh.rotation.x = -90 / 180 * Math.PI;
-    scene.add(mesh);
   }, [])
 
   /**
@@ -162,7 +83,6 @@ function Stars() {
     body.current!.append(render.domElement);
     init();
     createLight();
-    renderScene();
     return () => {
       cancelAnimationFrame(raf.current!);
       meshes.forEach((item) => {
@@ -208,13 +128,9 @@ function Stars() {
   }, [])
 
   const click = useCallback((e) => {
-    const arr = [createRect, createLine, createLambert];
-    const index = Math.floor(Math.random() * 3);
     const x = 20 - Math.random() * 40;
     const y = 10 - Math.random() * 20;
     const z = 15 - Math.random() * 30;
-    const color = new Color(Math.random(), Math.random(), Math.random())
-    // arr[index](x, y, z, color);
     createStart(x, y, z)
   }, [])
 
