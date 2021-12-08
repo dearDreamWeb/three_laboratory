@@ -38,6 +38,11 @@ function Stars() {
     camera.updateProjectionMatrix();
   }, [render, body])
 
+  const renderScene = useCallback(() => {
+    render.render(scene, camera);
+    raf.current = window.requestAnimationFrame(() => renderScene());
+}, [render])
+
   /**
    * 创建灯光
    */
@@ -45,7 +50,7 @@ function Stars() {
     const dirLight = new DirectionalLight('#ffffff', 1);
     const pointLight = new AmbientLight('#ffffff', 0.4);
     dirLight.castShadow = true;
-    dirLight.position.set(0, 200, 0);
+    dirLight.position.set(0, 200, -200);
     dirLight.shadow.mapSize.width = 1024;
     dirLight.shadow.mapSize.height = 1024;
     scene.add(dirLight, pointLight);
@@ -83,6 +88,7 @@ function Stars() {
     body.current!.append(render.domElement);
     init();
     createLight();
+    renderScene();
     return () => {
       cancelAnimationFrame(raf.current!);
       meshes.forEach((item) => {
@@ -127,7 +133,7 @@ function Stars() {
     camera.lookAt(0, 0, 0);
   }, [])
 
-  const click = useCallback((e) => {
+  const click = useCallback(() => {
     const x = 20 - Math.random() * 40;
     const y = 10 - Math.random() * 20;
     const z = 15 - Math.random() * 30;
