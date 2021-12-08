@@ -1,16 +1,15 @@
-import { useEffect, useRef, useCallback } from 'react'
-import styles from '../app.module.less'
+import { useEffect, useRef, useCallback, useState, ChangeEvent } from 'react'
+import styles from './rect.module.less'
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, BufferGeometry,
     LineBasicMaterial, Line, BoxBufferGeometry,
     MeshBasicMaterial, MeshLambertMaterial,
-    Color,
     BufferAttribute,
     DirectionalLight,
     AmbientLight,
     PlaneGeometry,
 } from 'three';
-import { randomColor } from '../utils'
+import { randomColor } from '../../utils'
 
 function Stars() {
     const body = useRef<HTMLDivElement>(null)
@@ -22,6 +21,14 @@ function Stars() {
     const raf = useRef<number>();
     const radius = useRef<number>(90);
     const pi = useRef<number>(15);
+    const [dirLightIntensity, setDirLightIntensity] = useState<number>(1);
+    const [pointLightIntensity, setPointLightIntensity] = useState<number>(0.4);
+    // 平行光
+    const dirLight = useRef<DirectionalLight>(new DirectionalLight('#ffffff', dirLightIntensity)).current;
+    // 环境光
+    const pointLight = useRef<AmbientLight>(new AmbientLight('#ffffff', pointLightIntensity)).current;
+
+
 
     const init = useCallback(() => {
         render.setSize(body.current!.offsetWidth, body.current!.offsetHeight);
@@ -93,8 +100,6 @@ function Stars() {
      * 创建灯光
      */
     const createLight = useCallback(() => {
-        const dirLight = new DirectionalLight('#ffffff', 1);
-        const pointLight = new AmbientLight('#ffffff', 0.4);
         dirLight.castShadow = true;
         dirLight.position.set(0, 200, 0);
         dirLight.shadow.mapSize.width = 1024;
@@ -137,6 +142,16 @@ function Stars() {
         createLambert();
         createFloor();
         renderScene();
+        render.domElement.addEventListener(
+            'webglcontextlost',
+            function (event) {
+                event.preventDefault();
+                setTimeout(function () {
+                    render.forceContextRestore();
+                }, 1);
+            },
+            false
+        );
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
@@ -181,9 +196,32 @@ function Stars() {
         camera.lookAt(0, 0, 0);
     }, [])
 
+    const DirLightIntensityChange = (e: ChangeEvent<HTMLInputElement>) => {
+        dirLight.intensity = Number(e.target.value);
+        setDirLightIntensity(Number(e.target.value));
+    }
+
+    const PointLightChange = (e: ChangeEvent<HTMLInputElement>) => {
+        pointLight.intensity = Number(e.target.value);
+        setPointLightIntensity(Number(e.target.value));
+    }
 
     return (
-        <div className={styles.app} ref={body} onMouseDown={down} onMouseUp={up} onMouseMove={move} onWheel={wheel}></div>
+        <div className={styles.rect_box}>
+            <div className={styles.three_box} ref={body} onMouseDown={down} onMouseUp={up} onMouseMove={move} onWheel={wheel}></div>
+            <div className={styles.options_box}>
+                <div className={styles.options_item}>
+                    <span className={styles.options_item_desc}>灯光强度：</span>
+                    <input type="range" min={0} max={1} step={0.1} value={dirLightIntensity} onChange={DirLightIntensityChange} />
+                    <div className={styles.options_item_process}>{dirLightIntensity * 100}%</div>
+                </div>
+                <div className={styles.options_item}>
+                    <span className={styles.options_item_desc}>环境光强度：</span>
+                    <input type="range" min={0} max={1} step={0.1} value={pointLightIntensity} onChange={PointLightChange} />
+                    <div className={styles.options_item_process}>{pointLightIntensity * 100}%</div>
+                </div>
+            </div>
+        </div>
     )
 }
 

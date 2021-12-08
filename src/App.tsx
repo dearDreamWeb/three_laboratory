@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import styles from './app.module.less';
 import Stars from './pages/Stars';
-import Rect from './pages/Rect';
+import Rect from './pages/rect/Rect';
 import Stats from 'stats.js';
 
 function App() {
@@ -20,7 +20,7 @@ function App() {
 
   return (
     <div className={styles.app}>
-      <Stars />
+      <Rect />
     </div>
   )
 }
