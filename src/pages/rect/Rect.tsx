@@ -148,7 +148,7 @@ function Stars() {
                 event.preventDefault();
                 setTimeout(function () {
                     render.forceContextRestore();
-                }, 1);
+                }, 1000);
             },
             false
         );

@@ -20,7 +20,7 @@ function App() {
 
   return (
     <div className={styles.app}>
-      <Rect />
+      <Stars />
     </div>
   )
 }

@@ -1,18 +1,8 @@
 import { useEffect, useRef, useCallback } from 'react'
 import styles from '../app.module.less'
 import {
-    Scene, PerspectiveCamera, WebGLRenderer, Mesh, BufferGeometry,
-    LineBasicMaterial, Line, BoxBufferGeometry,
-    MeshBasicMaterial, MeshLambertMaterial,
-    Color,
-    BufferAttribute,
-    DirectionalLight,
-    AmbientLight,
-    PlaneGeometry,
-    MeshPhongMaterial,
-    RingGeometry,
-    DoubleSide,
-    SphereBufferGeometry
+    Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
+    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, SphereBufferGeometry
 } from 'three';
 
 function Stars() {
@@ -40,6 +30,10 @@ function Stars() {
 
     const renderScene = useCallback(() => {
         render.render(scene, camera);
+        meshes.forEach((item) => {
+            item.rotation.x += 0.5 / 180 * Math.PI;
+            item.rotation.y += 0.3 / 180 * Math.PI;
+        })
         raf.current = window.requestAnimationFrame(() => renderScene());
     }, [render])
 
@@ -81,6 +75,7 @@ function Stars() {
         ring.rotation.x = rotationX / 180 * Math.PI;
 
         scene.add(sphere, ring);
+        meshes.push(sphere, ring)
     }, [])
 
     /**
@@ -136,9 +131,9 @@ function Stars() {
     }, [])
 
     const click = useCallback(() => {
-        const x = 10 - Math.random() * 20;
-        const y = 10 - Math.random() * 20;
-        const z = 5 - Math.random() * 10;
+        const x = 8 - Math.random() * 16;
+        const y = 8 - Math.random() * 16;
+        const z = 3 - Math.random() * 6;
         createStart(x, y, z)
     }, [])
 
