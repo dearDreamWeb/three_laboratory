@@ -1,11 +1,10 @@
-import { useEffect, useRef, useCallback } from 'react'
-import styles from '../app.module.less'
+import { useRef, useCallback, useEffect } from 'react';
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
     DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, SphereBufferGeometry
 } from 'three';
 
-function Stars() {
+const SolarSystem = () => {
     const body = useRef<HTMLDivElement>(null)
     const scene = useRef<Scene>(new Scene()).current;
     const camera = useRef<PerspectiveCamera>(new PerspectiveCamera()).current;
@@ -30,10 +29,10 @@ function Stars() {
 
     const renderScene = useCallback(() => {
         render.render(scene, camera);
-        meshes.forEach((item) => {
-            item.rotation.x += 0.5 / 180 * Math.PI;
-            item.rotation.y += 0.3 / 180 * Math.PI;
-        })
+        // meshes.forEach((item) => {
+        //     item.rotation.x += 0.5 / 180 * Math.PI;
+        //     item.rotation.y += 0.3 / 180 * Math.PI;
+        // })
         raf.current = window.requestAnimationFrame(() => renderScene());
     }, [render])
 
@@ -54,9 +53,9 @@ function Stars() {
     /**
      * 创建星球
      */
-    const createStart = useCallback((x, y, z) => {
+    const createStart = useCallback((x, y, z, r) => {
         // 球体
-        const width = Math.random() * 1;
+        const width = r;
         const color = new Color(Math.random(), Math.random(), Math.random());
         const geometry = new SphereBufferGeometry(width, 64, 64);
         const phong = new MeshPhongMaterial({ color });
@@ -71,7 +70,7 @@ function Stars() {
         const lambert = new MeshLambertMaterial({ color: color2, side: DoubleSide });
         const ring = new Mesh(geometry2, lambert);
         ring.position.set(x, y, z);
-        const rotationX = Math.floor(Math.random() * 180) - 360;
+        const rotationX = 90;
         ring.rotation.x = rotationX / 180 * Math.PI;
 
         scene.add(sphere, ring);
@@ -86,6 +85,10 @@ function Stars() {
         init();
         createLight();
         renderScene();
+        const x = 0;
+        const y = -10;
+        const z = -30;
+        createStart(x, y, z, 4)
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
@@ -120,25 +123,15 @@ function Stars() {
      */
     const wheel = useCallback((e) => {
         if (e.deltaY > 0) {
-            camera.fov -= (camera.near < camera.fov? 1 : 0);
+            camera.fov -= (camera.near < camera.fov ? 1 : 0);
         } else if (e.deltaY < 0) {
-            camera.fov += (camera.fov < camera.far? 1 : 0);
+            camera.fov += (camera.fov < camera.far ? 1 : 0);
         }
         camera.updateProjectionMatrix();
         render.render(scene, camera);
     }, [])
 
-    const click = useCallback(() => {
-        const x = 8 - Math.random() * 16;
-        const y = 8 - Math.random() * 16;
-        const z = 3 - Math.random() * 6;
-        createStart(x, y, z)
-    }, [])
-
-
-    return (
-        <div className={styles.app} ref={body} onMouseDown={down} onMouseUp={up} onMouseMove={move} onWheel={wheel} onClick={click}></div>
-    )
+    return <div style={{ width: '100%', height: '100%' }} ref={body} onMouseDown={down} onMouseUp={up} onMouseMove={move} onWheel={wheel}></div>
 }
 
-export default Stars
+export default SolarSystem;
