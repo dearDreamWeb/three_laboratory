@@ -142,16 +142,6 @@ function Stars() {
         createLambert();
         createFloor();
         renderScene();
-        render.domElement.addEventListener(
-            'webglcontextlost',
-            function (event) {
-                event.preventDefault();
-                setTimeout(function () {
-                    render.forceContextRestore();
-                }, 1000);
-            },
-            false
-        );
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
@@ -181,19 +171,17 @@ function Stars() {
         camera.lookAt(0, 0, 0);
     }, [])
 
-    const wheel = useCallback((e) => {
+    /**
+     * 滑轮放大缩小
+     */
+     const wheel = useCallback((e) => {
         if (e.deltaY > 0) {
-            pi.current++;
+            camera.fov -= (camera.near < camera.fov? 1 : 0);
         } else if (e.deltaY < 0) {
-            pi.current--;
+            camera.fov += (camera.fov < camera.far? 1 : 0);
         }
-        const { y } = camera.position;
-        radius.current -= e.movementX * 0.5;
-        const newX = pi.current * Math.cos(radius.current / 180 * Math.PI);
-        const newY = y + e.movementY * 0.1;
-        const newZ = pi.current * Math.sin(radius.current / 180 * Math.PI);
-        camera.position.set(newX, newY, newZ);
-        camera.lookAt(0, 0, 0);
+        camera.updateProjectionMatrix();
+        render.render(scene, camera);
     }, [])
 
     const DirLightIntensityChange = (e: ChangeEvent<HTMLInputElement>) => {
