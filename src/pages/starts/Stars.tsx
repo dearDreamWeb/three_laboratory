@@ -23,7 +23,8 @@ function Stars() {
         camera.fov = 45;
         camera.near = 1;
         camera.far = 1000;
-        camera.position.set(0, 3, pi.current);
+        const radiusNum = radius.current / 180 * Math.PI;
+        camera.position.set(pi.current * Math.cos(radiusNum), pi.current * 1.2, pi.current * Math.sin(radiusNum));
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
     }, [render, body])
@@ -106,8 +107,8 @@ function Stars() {
         if (!isDown.current) {
             return false;
         }
-        const { y } = camera.position;
-        radius.current -= e.movementX * 0.5;
+        const { x, y, z } = camera.position;
+        radius.current += e.movementX * 0.5;
         const newX = pi.current * Math.cos(radius.current / 180 * Math.PI);
         const newY = y + e.movementY * 0.1;
         const newZ = pi.current * Math.sin(radius.current / 180 * Math.PI);
