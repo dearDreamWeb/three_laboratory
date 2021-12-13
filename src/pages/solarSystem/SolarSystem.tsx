@@ -1,7 +1,8 @@
 import { useRef, useCallback, useEffect } from 'react';
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
-    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, SphereBufferGeometry
+    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide,
+    SphereBufferGeometry, Line, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial
 } from 'three';
 
 const SolarSystem = () => {
@@ -12,7 +13,7 @@ const SolarSystem = () => {
     const meshes = useRef<any[]>([]).current;
     const lights = useRef<any[]>([]).current;
     const raf = useRef<number>();
-    const radius = useRef<number>(90);
+    const radius = useRef<number>(0);
     const pi = useRef<number>(15);
 
     const init = useCallback(() => {
@@ -22,8 +23,8 @@ const SolarSystem = () => {
         camera.fov = 45;
         camera.near = 1;
         camera.far = 1000;
-        camera.position.set(0, 3, pi.current);
-        camera.lookAt(0, 0, 0);
+        camera.position.set(0, pi.current * 1.2, pi.current);
+        camera.lookAt(0, 3, 0);
         camera.updateProjectionMatrix();
     }, [render, body])
 
@@ -77,6 +78,18 @@ const SolarSystem = () => {
         meshes.push(sphere, ring)
     }, [])
 
+    // 线段
+    const originLine = (x: number, y: number, z: number, color: string) => {
+        const geometry = new BufferGeometry();
+        const vertices = [0, 0, 0, x, y, z]
+        geometry.setAttribute('position', new BufferAttribute(new Float32Array(vertices), 3))
+        const material = new LineBasicMaterial({
+            color
+        });
+        const line = new LineSegments(geometry, material);
+        scene.add(line);
+    }
+
     /**
      * 初始化
      */
@@ -85,10 +98,13 @@ const SolarSystem = () => {
         init();
         createLight();
         renderScene();
+        originLine(8, 0, 0, 'yellow');
+        originLine(0, 8, 0, 'red');
+        originLine(0, 0, 8, 'green');
         const x = 0;
-        const y = -10;
-        const z = -30;
-        createStart(x, y, z, 4)
+        const y = 0;
+        const z = 0;
+        createStart(x, y, z, 1.5)
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
@@ -109,7 +125,7 @@ const SolarSystem = () => {
         if (!isDown.current) {
             return false;
         }
-        const { y } = camera.position;
+        const { x, y, z } = camera.position;
         radius.current -= e.movementX * 0.5;
         const newX = pi.current * Math.cos(radius.current / 180 * Math.PI);
         const newY = y + e.movementY * 0.1;
