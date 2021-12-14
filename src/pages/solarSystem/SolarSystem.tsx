@@ -1,8 +1,8 @@
 import { useRef, useCallback, useEffect } from 'react';
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
-    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide,
-    SphereBufferGeometry, Line, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial
+    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide,MeshBasicMaterial,
+    SphereBufferGeometry, Line, PointLight, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial
 } from 'three';
 
 const SolarSystem = () => {
@@ -15,12 +15,13 @@ const SolarSystem = () => {
     const raf = useRef<number>();
     const radius = useRef<number>(0);
     const pi = useRef<number>(15);
+    const startData = useRef<any>({})
 
     const init = useCallback(() => {
         render.setSize(body.current!.offsetWidth, body.current!.offsetHeight);
         render.shadowMap.enabled = true;
         camera.aspect = body.current!.offsetWidth / body.current!.offsetHeight;
-        camera.fov = 45;
+        camera.fov = 60;
         camera.near = 1;
         camera.far = 1000;
         const radiusNum = radius.current / 180 * Math.PI;
@@ -31,10 +32,12 @@ const SolarSystem = () => {
 
     const renderScene = useCallback(() => {
         render.render(scene, camera);
-        // meshes.forEach((item) => {
-        //     item.rotation.x += 0.5 / 180 * Math.PI;
-        //     item.rotation.y += 0.3 / 180 * Math.PI;
-        // })
+        meshes.forEach((item) => {
+            const { y } = item.position;
+            const { distance, angle, speed } = startData.current[item.id];
+            startData.current[item.id].angle += speed;
+            item.position.set(distance * Math.cos(angle / 180 * Math.PI), y, distance * Math.sin(angle / 180 * Math.PI))
+        })
         raf.current = window.requestAnimationFrame(() => renderScene());
     }, [render])
 
@@ -42,10 +45,12 @@ const SolarSystem = () => {
      * 创建灯光
      */
     const createLight = useCallback(() => {
-        const dirLight = new DirectionalLight('#ffffff', 1);
-        const pointLight = new AmbientLight('#ffffff', 0.4);
+        // 灯光
+        const dirLight = new PointLight('#ffffff', 1.5, 100, 2);
+        // 环境光
+        const pointLight = new AmbientLight('#ffffff', 0.5);
         dirLight.castShadow = true;
-        dirLight.position.set(200, 200, 200);
+        dirLight.position.set(0, 0, 0);
         dirLight.shadow.mapSize.width = 1024;
         dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight, pointLight);
@@ -54,16 +59,24 @@ const SolarSystem = () => {
 
     /**
      * 创建星球
+     * r: 半径
+     * speed: 公转的速度
      */
-    const createStart = useCallback((x, y, z, r) => {
+    const createStart = useCallback((x, y, z, r, speed) => {
         // 球体
         const width = r;
         const color = new Color(Math.random(), Math.random(), Math.random());
         const geometry = new SphereBufferGeometry(width, 64, 64);
         const phong = new MeshPhongMaterial({ color });
         const sphere = new Mesh(geometry, phong);
+        sphere.castShadow = true;
+        sphere.receiveShadow = true;
         sphere.position.set(x, y, z);
-
+        startData.current[sphere.id] = {
+            angle: Math.atan(z / x || 0),
+            distance: Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)),
+            speed
+        }
         // 星云
         const color2 = new Color(Math.random(), Math.random(), Math.random());
         const innerRadius = width * 1.2; // 星云的内环的半径 
@@ -71,10 +84,17 @@ const SolarSystem = () => {
         const geometry2 = new RingGeometry(innerRadius, outerRadius, 64);
         const lambert = new MeshLambertMaterial({ color: color2, side: DoubleSide });
         const ring = new Mesh(geometry2, lambert);
+        ring.castShadow = true;
+        ring.receiveShadow = true;
         ring.position.set(x, y, z);
         const rotationX = 90;
         ring.rotation.x = rotationX / 180 * Math.PI;
 
+        startData.current[ring.id] = {
+            angle: Math.atan(z / x || 0),
+            distance: Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)),
+            speed
+        }
         scene.add(sphere, ring);
         meshes.push(sphere, ring)
     }, [])
@@ -105,7 +125,9 @@ const SolarSystem = () => {
         const x = 0;
         const y = 0;
         const z = 0;
-        createStart(x, y, z, 1.5)
+        // createStart(x, y, z, 2, 1)
+        createStart(5, 0, 5, 0.8, 1)
+        createStart(10, 0, 10, 2, 1.2)
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
@@ -122,11 +144,14 @@ const SolarSystem = () => {
     const isDown = useRef<boolean>(false);
     const down = useCallback(() => isDown.current = true, [])
     const up = useCallback(() => isDown.current = false, [])
+    /**
+     * 左右旋转
+     */
     const move = useCallback((e) => {
         if (!isDown.current) {
             return false;
         }
-        const { x, y, z } = camera.position;
+        const { y } = camera.position;
         radius.current += e.movementX * 0.5;
         const newX = pi.current * Math.cos(radius.current / 180 * Math.PI);
         const newY = y + e.movementY * 0.1;
