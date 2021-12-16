@@ -2,7 +2,8 @@ import { useRef, useCallback, useEffect } from 'react';
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
     DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide,MeshBasicMaterial,
-    SphereBufferGeometry, Line, PointLight, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial
+    SphereBufferGeometry, Line, PointLight, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial,
+    SpotLight
 } from 'three';
 
 const SolarSystem = () => {
@@ -35,6 +36,8 @@ const SolarSystem = () => {
         meshes.forEach((item) => {
             const { y } = item.position;
             const { distance, angle, speed } = startData.current[item.id];
+           console.log(item);
+           item.material.opacity = 0.1;
             startData.current[item.id].angle += speed;
             item.position.set(distance * Math.cos(angle / 180 * Math.PI), y, distance * Math.sin(angle / 180 * Math.PI))
         })
@@ -46,11 +49,11 @@ const SolarSystem = () => {
      */
     const createLight = useCallback(() => {
         // 灯光
-        const dirLight = new PointLight('#ffffff', 1.5, 100, 2);
+        const pointLight = new AmbientLight('#ffffff', 1);
         // 环境光
-        const pointLight = new AmbientLight('#ffffff', 0.5);
+        const dirLight = new SpotLight('#ffffff', 1, 0, Math.PI);
         dirLight.castShadow = true;
-        dirLight.position.set(0, 0, 0);
+        dirLight.position.set(0, 3, 0);
         dirLight.shadow.mapSize.width = 1024;
         dirLight.shadow.mapSize.height = 1024;
         scene.add(dirLight, pointLight);
@@ -72,6 +75,7 @@ const SolarSystem = () => {
         sphere.castShadow = true;
         sphere.receiveShadow = true;
         sphere.position.set(x, y, z);
+
         startData.current[sphere.id] = {
             angle: Math.atan(z / x || 0),
             distance: Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)),
@@ -119,15 +123,13 @@ const SolarSystem = () => {
         init();
         createLight();
         renderScene();
-        originLine(8, 0, 0, 'yellow');
-        originLine(0, 8, 0, 'red');
-        originLine(0, 0, 8, 'green');
-        const x = 0;
-        const y = 0;
-        const z = 0;
-        // createStart(x, y, z, 2, 1)
+        originLine(15, 0, 0, 'yellow');
+        originLine(0, 15, 0, 'red');
+        originLine(0, 0, 15, 'green');
+
+        createStart(0, 0, 0, 2, 1)
         createStart(5, 0, 5, 0.8, 1)
-        createStart(10, 0, 10, 2, 1.2)
+        createStart(10, 0, 10, 2, 1)
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
