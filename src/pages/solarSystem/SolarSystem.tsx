@@ -1,10 +1,11 @@
 import { useRef, useCallback, useEffect } from 'react';
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
-    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide,MeshBasicMaterial,
+    DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, MeshBasicMaterial,
     SphereBufferGeometry, Line, PointLight, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial,
     SpotLight
 } from 'three';
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 const SolarSystem = () => {
     const body = useRef<HTMLDivElement>(null)
@@ -22,7 +23,7 @@ const SolarSystem = () => {
         render.setSize(body.current!.offsetWidth, body.current!.offsetHeight);
         render.shadowMap.enabled = true;
         camera.aspect = body.current!.offsetWidth / body.current!.offsetHeight;
-        camera.fov = 60;
+        camera.fov = 100;
         camera.near = 1;
         camera.far = 1000;
         const radiusNum = radius.current / 180 * Math.PI;
@@ -36,8 +37,7 @@ const SolarSystem = () => {
         meshes.forEach((item) => {
             const { y } = item.position;
             const { distance, angle, speed } = startData.current[item.id];
-           console.log(item);
-           item.material.opacity = 0.1;
+            item.material.opacity = 0.1;
             startData.current[item.id].angle += speed;
             item.position.set(distance * Math.cos(angle / 180 * Math.PI), y, distance * Math.sin(angle / 180 * Math.PI))
         })
@@ -75,12 +75,12 @@ const SolarSystem = () => {
         sphere.castShadow = true;
         sphere.receiveShadow = true;
         sphere.position.set(x, y, z);
-
         startData.current[sphere.id] = {
             angle: Math.atan(z / x || 0),
             distance: Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)),
             speed
         }
+
         // 星云
         const color2 = new Color(Math.random(), Math.random(), Math.random());
         const innerRadius = width * 1.2; // 星云的内环的半径 
@@ -115,12 +115,21 @@ const SolarSystem = () => {
         scene.add(line);
     }
 
+
+    /**
+     * 初始化控制器
+     */
+    const initControls = ()=>{
+        new OrbitControls(camera,render.domElement);
+    }
+
     /**
      * 初始化
      */
     useEffect(() => {
         body.current!.append(render.domElement);
         init();
+        initControls();
         createLight();
         renderScene();
         originLine(15, 0, 0, 'yellow');
@@ -143,25 +152,6 @@ const SolarSystem = () => {
         }
     }, [])
 
-    const isDown = useRef<boolean>(false);
-    const down = useCallback(() => isDown.current = true, [])
-    const up = useCallback(() => isDown.current = false, [])
-    /**
-     * 左右旋转
-     */
-    const move = useCallback((e) => {
-        if (!isDown.current) {
-            return false;
-        }
-        const { y } = camera.position;
-        radius.current += e.movementX * 0.5;
-        const newX = pi.current * Math.cos(radius.current / 180 * Math.PI);
-        const newY = y + e.movementY * 0.1;
-        const newZ = pi.current * Math.sin(radius.current / 180 * Math.PI);
-        camera.position.set(newX, newY, newZ);
-        camera.lookAt(0, 0, 0);
-    }, [])
-
     /**
      * 滑轮放大缩小
      */
@@ -175,7 +165,7 @@ const SolarSystem = () => {
         render.render(scene, camera);
     }, [])
 
-    return <div style={{ width: '100%', height: '100%' }} ref={body} onMouseDown={down} onMouseUp={up} onMouseMove={move} onWheel={wheel}></div>
+    return <div style={{ width: '100%', height: '100%' }} ref={body} ></div>
 }
 
 export default SolarSystem;

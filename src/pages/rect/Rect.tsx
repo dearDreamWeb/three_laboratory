@@ -10,6 +10,7 @@ import {
     PlaneGeometry,
 } from 'three';
 import { randomColor } from '../../utils'
+import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 
 function Stars() {
     const body = useRef<HTMLDivElement>(null)
@@ -132,11 +133,19 @@ function Stars() {
     }, [])
 
     /**
+     * 初始化控制器
+     */
+    const initControls = () => {
+        new OrbitControls(camera, render.domElement);
+    }
+
+    /**
      * 初始化
      */
     useEffect(() => {
         body.current!.append(render.domElement);
         init();
+        initControls();
         createLight();
         createRect();
         createLine();
@@ -156,35 +165,6 @@ function Stars() {
         }
     }, [])
 
-    const isDown = useRef<boolean>(false);
-    const down = useCallback(() => isDown.current = true, [])
-    const up = useCallback(() => isDown.current = false, [])
-    const move = useCallback((e) => {
-        if (!isDown.current) {
-            return false;
-        }
-        const { x, y, z } = camera.position;
-        radius.current += e.movementX * 0.5;
-        const newX = pi.current * Math.cos(radius.current / 180 * Math.PI);
-        const newY = y + e.movementY * 0.1;
-        const newZ = pi.current * Math.sin(radius.current / 180 * Math.PI);
-        camera.position.set(newX, newY, newZ);
-        camera.lookAt(0, 0, 0);
-    }, [])
-
-    /**
-     * 滑轮放大缩小
-     */
-     const wheel = useCallback((e) => {
-        if (e.deltaY > 0) {
-            camera.fov -= (camera.near < camera.fov? 1 : 0);
-        } else if (e.deltaY < 0) {
-            camera.fov += (camera.fov < camera.far? 1 : 0);
-        }
-        camera.updateProjectionMatrix();
-        render.render(scene, camera);
-    }, [])
-
     const DirLightIntensityChange = (e: ChangeEvent<HTMLInputElement>) => {
         dirLight.intensity = Number(e.target.value);
         setDirLightIntensity(Number(e.target.value));
@@ -197,7 +177,7 @@ function Stars() {
 
     return (
         <div className={styles.rect_box}>
-            <div className={styles.three_box} ref={body} onMouseDown={down} onMouseUp={up} onMouseMove={move} onWheel={wheel}></div>
+            <div className={styles.three_box} ref={body}></div>
             <div className={styles.options_box}>
                 <div className={styles.options_item}>
                     <span className={styles.options_item_desc}>灯光强度：</span>
