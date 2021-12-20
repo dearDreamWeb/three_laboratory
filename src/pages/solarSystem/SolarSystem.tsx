@@ -23,11 +23,10 @@ const SolarSystem = () => {
         render.setSize(body.current!.offsetWidth, body.current!.offsetHeight);
         render.shadowMap.enabled = true;
         camera.aspect = body.current!.offsetWidth / body.current!.offsetHeight;
-        camera.fov = 100;
-        camera.near = 1;
-        camera.far = 1000;
-        const radiusNum = radius.current / 180 * Math.PI;
-        camera.position.set(pi.current * Math.cos(radiusNum), pi.current * 1.2, pi.current * Math.sin(radiusNum));
+        // camera.fov = 100;
+        // camera.near = 1;
+        // camera.far = 1000;
+        camera.position.set(130, 80, 0);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
     }, [render, body])
@@ -39,7 +38,7 @@ const SolarSystem = () => {
             const { distance, angle, speed } = startData.current[item.id];
             item.material.opacity = 0.1;
             startData.current[item.id].angle += speed;
-            item.position.set(distance * Math.cos(angle / 180 * Math.PI), y, distance * Math.sin(angle / 180 * Math.PI))
+            item.position.set(distance * Math.sin(angle / 180 * Math.PI), y, distance * Math.cos(angle / 180 * Math.PI))
         })
         raf.current = window.requestAnimationFrame(() => renderScene());
     }, [render])
@@ -65,7 +64,7 @@ const SolarSystem = () => {
      * r: 半径
      * speed: 公转的速度
      */
-    const createStart = useCallback((x, y, z, r, speed) => {
+    const createStart = useCallback((x, y, z, r, speed, isRing?: boolean) => {
         // 球体
         const width = r;
         const color = new Color(Math.random(), Math.random(), Math.random());
@@ -80,27 +79,39 @@ const SolarSystem = () => {
             distance: Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)),
             speed
         }
+        const distance = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
+        /*轨道*/
+        let track = new Mesh(new RingGeometry(distance - 0.2, distance + 0.1, 64, 1),
+            new MeshBasicMaterial({ color: 0x888888, side: DoubleSide })
+        );
+        track.rotation.x = - Math.PI / 2;
 
         // 星云
-        const color2 = new Color(Math.random(), Math.random(), Math.random());
-        const innerRadius = width * 1.2; // 星云的内环的半径 
-        const outerRadius = innerRadius * 1.1; // 星云的外环的半径 
-        const geometry2 = new RingGeometry(innerRadius, outerRadius, 64);
-        const lambert = new MeshLambertMaterial({ color: color2, side: DoubleSide });
-        const ring = new Mesh(geometry2, lambert);
-        ring.castShadow = true;
-        ring.receiveShadow = true;
-        ring.position.set(x, y, z);
-        const rotationX = 90;
-        ring.rotation.x = rotationX / 180 * Math.PI;
+        if (isRing) {
+            const color2 = new Color(Math.random(), Math.random(), Math.random());
+            const innerRadius = width * 1.2; // 星云的内环的半径 
+            const outerRadius = innerRadius * 1.1; // 星云的外环的半径 
+            const geometry2 = new RingGeometry(innerRadius, outerRadius, 64);
+            const lambert = new MeshLambertMaterial({ color: color2, side: DoubleSide });
+            const ring = new Mesh(geometry2, lambert);
+            ring.castShadow = true;
+            ring.receiveShadow = true;
+            ring.position.set(x, y, z);
+            const rotationX = 90;
+            ring.rotation.x = rotationX / 180 * Math.PI;
 
-        startData.current[ring.id] = {
-            angle: Math.atan(z / x || 0),
-            distance: Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2)),
-            speed
+            startData.current[ring.id] = {
+                angle: Math.atan(z / x || 0),
+                distance,
+                speed
+            }
+            scene.add(sphere, track, ring);
+            meshes.push(sphere, ring)
+        } else {
+            scene.add(sphere, track);
+            meshes.push(sphere)
         }
-        scene.add(sphere, ring);
-        meshes.push(sphere, ring)
+
     }, [])
 
     // 线段
@@ -119,8 +130,8 @@ const SolarSystem = () => {
     /**
      * 初始化控制器
      */
-    const initControls = ()=>{
-        new OrbitControls(camera,render.domElement);
+    const initControls = () => {
+        new OrbitControls(camera, render.domElement);
     }
 
     /**
@@ -136,9 +147,26 @@ const SolarSystem = () => {
         originLine(0, 15, 0, 'red');
         originLine(0, 0, 15, 'green');
 
-        createStart(0, 0, 0, 2, 1)
-        createStart(5, 0, 5, 0.8, 1)
-        createStart(10, 0, 10, 2, 1)
+        // 太阳
+        createStart(0, 0, 0, -10, 1)
+        // 水星
+        createStart(0, 0, -15, 0.6, 0.03)
+        // 金星
+        createStart(0, 0, -20, 2, 0.04)
+        // 地球
+        createStart(0, 0, -25, 2.1, 0.045)
+        // 火星
+        createStart(0, 0, -30, 0.9, 0.09)
+        // 木星
+        createStart(0, 0, -40, 5, 0.1)
+        // 土星
+        createStart(0, 0, -55, 4.5, 0.18, true)
+        // 天王星
+        createStart(0, 0, -65, 2, 0.05)
+        // 海王星
+        createStart(0, 0, -75, 2, 1)
+
+
         return () => {
             cancelAnimationFrame(raf.current!);
             meshes.forEach((item) => {
