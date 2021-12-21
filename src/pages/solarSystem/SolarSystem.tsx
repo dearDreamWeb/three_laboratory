@@ -3,9 +3,18 @@ import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
     DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, MeshBasicMaterial,
     SphereBufferGeometry, Line, PointLight, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial,
-    SpotLight
+    SpotLight, TextureLoader
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
+import sunTexture from '../../assets/images/sun.jpg';  // 太阳
+import mercuryTexture from '../../assets/images/mercury.jpg'; // 水星
+import venusTexture from '../../assets/images/venus.jpg';  // 金星
+import earthTexture from '../../assets/images/earth.jpg';   // 地球
+import marsTexture from '../../assets/images/mars.jpg';    // 火星
+import jupiterTexture from '../../assets/images/jupiter.jpg'; // 木星
+import saturnTexture from '../../assets/images/saturn.jpg'; // 土星
+import uranusTexture from '../../assets/images/uranus.jpg'; // 天王星
+import neptuneTexture from '../../assets/images/neptune.jpg'; // 海王星
 
 const SolarSystem = () => {
     const body = useRef<HTMLDivElement>(null)
@@ -64,12 +73,13 @@ const SolarSystem = () => {
      * r: 半径
      * speed: 公转的速度
      */
-    const createStart = useCallback((x, y, z, r, speed, isRing?: boolean) => {
+    const createStar = useCallback((x, y, z, r, speed, img, isRing?: boolean) => {
+        const texture = new TextureLoader().load(img);
         // 球体
         const width = r;
-        const color = new Color(Math.random(), Math.random(), Math.random());
+        // const color = new Color(Math.random(), Math.random(), Math.random());
         const geometry = new SphereBufferGeometry(width, 64, 64);
-        const phong = new MeshPhongMaterial({ color });
+        const phong = new MeshPhongMaterial({ map: texture });
         const sphere = new Mesh(geometry, phong);
         sphere.castShadow = true;
         sphere.receiveShadow = true;
@@ -81,7 +91,7 @@ const SolarSystem = () => {
         }
         const distance = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
         /*轨道*/
-        let track = new Mesh(new RingGeometry(distance - 0.2, distance + 0.1, 64, 1),
+        let track = new Mesh(new RingGeometry(distance - 0.2, distance + 0.05, 64, 1),
             new MeshBasicMaterial({ color: 0x888888, side: DoubleSide })
         );
         track.rotation.x = - Math.PI / 2;
@@ -143,28 +153,29 @@ const SolarSystem = () => {
         initControls();
         createLight();
         renderScene();
-        originLine(15, 0, 0, 'yellow');
-        originLine(0, 15, 0, 'red');
-        originLine(0, 0, 15, 'green');
+        // x,y,z轴
+        // originLine(15, 0, 0, 'yellow');
+        // originLine(0, 15, 0, 'red');
+        // originLine(0, 0, 15, 'green');
 
         // 太阳
-        createStart(0, 0, 0, -10, 1)
+        createStar(0, 0, 0, -10, 1, sunTexture)
         // 水星
-        createStart(0, 0, -15, 0.6, 0.03)
+        createStar(0, 0, -15, 0.6, 0.03, mercuryTexture)
         // 金星
-        createStart(0, 0, -20, 2, 0.04)
+        createStar(0, 0, -20, 2, 0.04, venusTexture)
         // 地球
-        createStart(0, 0, -25, 2.1, 0.045)
+        createStar(0, 0, -25, 2.1, 0.045, earthTexture)
         // 火星
-        createStart(0, 0, -30, 0.9, 0.09)
+        createStar(0, 0, -30, 0.9, 0.09, marsTexture)
         // 木星
-        createStart(0, 0, -40, 5, 0.1)
+        createStar(0, 0, -40, 5, 0.1, jupiterTexture)
         // 土星
-        createStart(0, 0, -55, 4.5, 0.18, true)
+        createStar(0, 0, -55, 4.5, 0.18, saturnTexture, true)
         // 天王星
-        createStart(0, 0, -65, 2, 0.05)
+        createStar(0, 0, -65, 2, 0.05, uranusTexture)
         // 海王星
-        createStart(0, 0, -75, 2, 1)
+        createStar(0, 0, -75, 2, 1, neptuneTexture)
 
 
         return () => {
