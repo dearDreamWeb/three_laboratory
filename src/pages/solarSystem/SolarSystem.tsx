@@ -3,7 +3,7 @@ import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
     DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, MeshBasicMaterial,
     SphereBufferGeometry, Line, PointLight, LineSegments, BufferGeometry, BufferAttribute, LineBasicMaterial,
-    SpotLight, TextureLoader
+    SpotLight, TextureLoader, PointsMaterial, Vector3, Points
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import sunTexture from '../../assets/images/sun.jpg';  // 太阳
@@ -24,8 +24,6 @@ const SolarSystem = () => {
     const meshes = useRef<any[]>([]).current;
     const lights = useRef<any[]>([]).current;
     const raf = useRef<number>();
-    const radius = useRef<number>(0);
-    const pi = useRef<number>(15);
     const startData = useRef<any>({})
 
     const init = useCallback(() => {
@@ -39,6 +37,31 @@ const SolarSystem = () => {
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
     }, [render, body])
+
+    /**
+     * 初始化星空
+     */
+    const initStarField = () => {
+        const starsMaterial = new PointsMaterial();
+        let starsGeometry = new BufferGeometry();
+        let star = [];
+        let colorArr = [];
+        let sizeArr = [];
+        for (let i = 0; i < 10000; i++) {
+            star.push(getRange(-2000, 2000), getRange(-2000, 2000), getRange(-2000, 2000))
+            colorArr.push(getRange(0, 255),getRange(0, 255),getRange(0, 255));
+            sizeArr.push(getRange(5, 6))
+        }
+        starsGeometry.setAttribute('position', new BufferAttribute(new Float32Array(star), 3))
+        starsGeometry.setAttribute('color', new BufferAttribute(new Float32Array(colorArr), 3))
+        starsGeometry.setAttribute('size', new BufferAttribute(new Float32Array(sizeArr), 1))
+        let starField = new Points(starsGeometry, starsMaterial);
+        scene.add(starField);
+    }
+
+    const getRange = (min: number, max: number): number => {
+        return Math.random() * min + Math.random() * (max - min);
+    }
 
     const renderScene = useCallback(() => {
         render.render(scene, camera);
@@ -59,7 +82,7 @@ const SolarSystem = () => {
         // 灯光
         const pointLight = new AmbientLight('#ffffff', 1);
         // 环境光
-        const dirLight = new SpotLight('#ffffff', 1, 0, Math.PI);
+        const dirLight = new SpotLight('#ffffff', 0.8, 0, Math.PI);
         dirLight.castShadow = true;
         dirLight.position.set(0, 3, 0);
         dirLight.shadow.mapSize.width = 1024;
@@ -90,9 +113,10 @@ const SolarSystem = () => {
             speed
         }
         const distance = Math.sqrt(Math.pow(x, 2) + Math.pow(z, 2));
+
         /*轨道*/
-        let track = new Mesh(new RingGeometry(distance - 0.2, distance + 0.05, 64, 1),
-            new MeshBasicMaterial({ color: 0x888888, side: DoubleSide })
+        let track = new Mesh(new RingGeometry(distance - 0.05, distance + 0.05, 64, 1),
+            new MeshLambertMaterial({ color: 0x888888, side: DoubleSide })
         );
         track.rotation.x = - Math.PI / 2;
 
@@ -150,6 +174,7 @@ const SolarSystem = () => {
     useEffect(() => {
         body.current!.append(render.domElement);
         init();
+        initStarField();
         initControls();
         createLight();
         renderScene();
@@ -189,19 +214,6 @@ const SolarSystem = () => {
             })
             render.dispose();
         }
-    }, [])
-
-    /**
-     * 滑轮放大缩小
-     */
-    const wheel = useCallback((e) => {
-        if (e.deltaY > 0) {
-            camera.fov -= (camera.near < camera.fov ? 1 : 0);
-        } else if (e.deltaY < 0) {
-            camera.fov += (camera.fov < camera.far ? 1 : 0);
-        }
-        camera.updateProjectionMatrix();
-        render.render(scene, camera);
     }, [])
 
     return <div style={{ width: '100%', height: '100%' }} ref={body} ></div>
