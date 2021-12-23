@@ -1,4 +1,18 @@
 .app{
     width: 100vw;
     height: 100vh;
+    .optionBox{
+        position: fixed;
+        right: 0;
+        bottom:0;
+        padding: 10px;
+        background: rgba(131, 131, 131, 0.8);
+        text-align: center;
+        .optionItem{
+            cursor: pointer;
+            &.checkedItem{
+                color: #f40;
+            }
+        }
+    }
 }

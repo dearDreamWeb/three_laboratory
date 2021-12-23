@@ -181,12 +181,28 @@ function Stars() {
             <div className={styles.options_box}>
                 <div className={styles.options_item}>
                     <span className={styles.options_item_desc}>灯光强度：</span>
-                    <input type="range" min={0} max={1} step={0.1} value={dirLightIntensity} onChange={DirLightIntensityChange} />
+                    <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={dirLightIntensity}
+                        onChange={DirLightIntensityChange}
+                        onMouseMove={(e) => e.preventDefault()}
+                    />
                     <div className={styles.options_item_process}>{dirLightIntensity * 100}%</div>
                 </div>
                 <div className={styles.options_item}>
                     <span className={styles.options_item_desc}>环境光强度：</span>
-                    <input type="range" min={0} max={1} step={0.1} value={pointLightIntensity} onChange={PointLightChange} />
+                    <input
+                        type="range"
+                        min={0}
+                        max={1}
+                        step={0.1}
+                        value={pointLightIntensity}
+                        onChange={PointLightChange}
+                        onMouseMove={(e) => e.preventDefault()}
+                    />
                     <div className={styles.options_item_process}>{pointLightIntensity * 100}%</div>
                 </div>
             </div>

@@ -1,5 +1,5 @@
-import { useEffect, useRef, useCallback } from 'react'
-import styles from '../../app.module.less'
+import { useEffect, useRef, useCallback, useState } from 'react'
+import styles from './stars.module.less'
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, MeshLambertMaterial, Color,
     DirectionalLight, AmbientLight, MeshPhongMaterial, RingGeometry, DoubleSide, SphereBufferGeometry
@@ -16,6 +16,7 @@ function Stars() {
     const raf = useRef<number>();
     const radius = useRef<number>(90);
     const pi = useRef<number>(15);
+    const [showText, setShowText] = useState<boolean>(true);
 
     const init = useCallback(() => {
         render.setSize(body.current!.offsetWidth, body.current!.offsetHeight);
@@ -115,11 +116,17 @@ function Stars() {
         const y = 8 - Math.random() * 16;
         const z = 3 - Math.random() * 6;
         createStart(x, y, z)
+        setShowText(false)
     }, [])
 
 
     return (
-        <div className={styles.app} ref={body} onClick={click}></div>
+        <>
+            <div className={styles.app} ref={body} onClick={click}></div>
+            {
+                showText && <div className={styles.tipBox}>鼠标点击屏幕随机生成星球</div>
+            }
+        </>
     )
 }
 
