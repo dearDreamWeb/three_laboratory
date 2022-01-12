@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useMemo } from 'react';
 import styles from './app.module.less';
 import Stars from './pages/starts/Stars';
 import Rect from './pages/rect/Rect';
+import Loader from './pages/loader/Loader';
 import SolarSystem from './pages/solarSystem/SolarSystem';
 import Stats from 'stats.js';
 
@@ -17,12 +18,16 @@ const list = [
   {
     key: '2',
     text: '生成快乐星球',
-  }
+  },
+  {
+    key: '3',
+    text: '模型',
+  },
 ]
 
 function App() {
   const stats = useRef(new Stats()).current;
-  const [checkIndex, setCheckIndex] = useState<number>(0)
+  const [checkIndex, setCheckIndex] = useState<number>(3)
 
   useEffect(() => {
     stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
@@ -45,6 +50,9 @@ function App() {
     }
     if (checkIndex === 2) {
       return <Stars/>;
+    }
+    if (checkIndex === 3) {
+      return <Loader/>;
     }
   }, [checkIndex])
 
