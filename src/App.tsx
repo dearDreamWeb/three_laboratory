@@ -10,24 +10,28 @@ const list = [
   {
     key: '0',
     text: '太阳系',
+    component: <SolarSystem />
+  },
+  {
+    key: '3',
+    text: '爱跳舞的怪兽',
+    component: <Loader />
   },
   {
     key: '1',
     text: '方块材质投影',
+    component: <Rect />
   },
   {
     key: '2',
     text: '生成快乐星球',
-  },
-  {
-    key: '3',
-    text: '模型',
+    component: <Stars />
   },
 ]
 
 function App() {
   const stats = useRef(new Stats()).current;
-  const [checkIndex, setCheckIndex] = useState<number>(3)
+  const [checkIndex, setCheckIndex] = useState<number>(0)
 
   useEffect(() => {
     stats.showPanel(0); // 0: fps, 1: ms, 2: mb, 3+: custom
@@ -42,18 +46,7 @@ function App() {
   }
 
   const ShowContext = useMemo(() => {
-    if (checkIndex === 0) {
-      return <SolarSystem/>;
-    }
-    if (checkIndex === 1) {
-      return <Rect/>;
-    }
-    if (checkIndex === 2) {
-      return <Stars/>;
-    }
-    if (checkIndex === 3) {
-      return <Loader/>;
-    }
+    return list[checkIndex].component;
   }, [checkIndex])
 
   return (
