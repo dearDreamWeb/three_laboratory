@@ -5,7 +5,11 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: "./",
-  server:{
+  server: {
     port: 1254
-  }
+  },
+  // build: {
+  //   // 打包大小限制20M
+  //   chunkSizeWarningLimit: 20000,
+  // }
 })

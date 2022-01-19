@@ -104,7 +104,7 @@ function Loader() {
      */
     const loaderFbx = useCallback(() => {
         const loader = new FBXLoader();
-        loader.load('/loaders/test.fbx', (obj) => {
+        loader.load('https://cdn2.mihuiai.com/monsterModel.fbx', (obj) => {
             obj.position.set(0, 0, 0);
             obj.scale.set(0.1, 0.1, 0.1);
             mixer.current = new AnimationMixer(obj);
