@@ -8,8 +8,8 @@ export default defineConfig({
   server: {
     port: 1254
   },
-  // build: {
-  //   // 打包大小限制20M
-  //   chunkSizeWarningLimit: 20000,
-  // }
+  build: {
+    // 打包大小限制20M
+    chunkSizeWarningLimit: 20000,
+  }
 })
