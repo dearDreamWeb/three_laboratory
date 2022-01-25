@@ -1,4 +1,4 @@
-import { useEffect, useRef, useCallback, useState, ChangeEvent } from 'react'
+import { useEffect, useRef, useCallback, useState, ChangeEvent, useMemo } from 'react'
 import styles from './loader.module.less'
 import {
     Scene, PerspectiveCamera, WebGLRenderer, Mesh, Clock,
@@ -35,6 +35,7 @@ function Loader() {
     const mixer = useRef<any>();
     const audioRef = useRef<any>();
 
+    const [isLoadSuccess, setIsLoadSuccess] = useState<boolean>(false);
 
     // 平行光
     const dirLight = useRef<DirectionalLight>(new DirectionalLight('rgba(255,255,255,0.5)')).current;
@@ -73,7 +74,6 @@ function Loader() {
         if (mixer.current) {
             mixer.current.update(time);
         }
-
         raf.current = window.requestAnimationFrame(() => renderScene());
     }, [render])
 
@@ -98,6 +98,17 @@ function Loader() {
         new OrbitControls(camera, render.domElement);
     }
 
+    /**
+     * 模型加载进度
+     */
+    const modelProgress = (progress: ProgressEvent<EventTarget>) => {
+        const { loaded, total } = progress;
+        const rate = (loaded / total * 100).toFixed(2);
+        if (Number(rate) >= 100) {
+            audioRef.current.play();
+            setIsLoadSuccess(true);
+        }
+    }
 
     /**
      * 加载模型
@@ -112,7 +123,7 @@ function Loader() {
             animated.setLoop(true);
             animated.play();
             scene.add(obj);
-        })
+        }, modelProgress)
     }, [])
 
     /**
@@ -138,7 +149,6 @@ function Loader() {
         });
         loaderFbx();
         renderScene();
-        audioRef.current.play();
         return () => {
             cancelAnimationFrame(raf.current!);
 
@@ -153,6 +163,11 @@ function Loader() {
         <div className={styles.rect_box}>
             <div className={styles.three_box} ref={body}></div>
             <audio src={yangMp3} loop ref={audioRef}></audio>
+            {
+                !isLoadSuccess && (
+                    <div className={styles.model_progress}>模型文件稍大，请耐心等待，模型加载中...</div>
+                )
+            }
         </div>
     )
 }
