@@ -14,6 +14,7 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import planeTexture from '../../assets/images/plane.jpg';
 import starPlane from '../../assets/images/starPlane.gif';
+import snowImg from '../../assets/images/snow.png';
 
 interface CreateFloorProps {
     position: { x: number; y: number; z: number };
@@ -33,6 +34,7 @@ function Loader() {
     const clock = useRef<Clock>(new Clock())
     const mixer = useRef<any>();
     const audioRef = useRef<any>();
+    const meshes = useRef<any[]>([]).current;
 
     const [isLoadSuccess, setIsLoadSuccess] = useState<boolean>(false);
 
@@ -69,6 +71,17 @@ function Loader() {
 
     const renderScene = useCallback(() => {
         render.render(scene, camera);
+        meshes.forEach((item, index) => {
+            if (item.name === 'snow') {
+                const { x, y, z } = item.position;
+                const { originX, originY, originZ, xSpeed, ySpeed, zSpeed } = item.baseInfo;
+                if (y > 0) {
+                    item.position.set(x - xSpeed, y - ySpeed, z - zSpeed);
+                } else {
+                    item.position.set(originX, originY, originZ);
+                }
+            }
+        })
         const time = clock.current.getDelta();
         if (mixer.current) {
             mixer.current.update(time);
@@ -104,6 +117,7 @@ function Loader() {
         const { loaded, total } = progress;
         const rate = (loaded / total * 100).toFixed(2);
         if (Number(rate) >= 100) {
+            // 播放音乐
             audioRef.current.play();
             setIsLoadSuccess(true);
         }
@@ -124,6 +138,55 @@ function Loader() {
             scene.add(obj);
         }, modelProgress)
     }, [])
+
+    /**
+     * 随机数
+     * @param min 
+     * @param max 
+     * @returns 
+     */
+    const randomRange = (min: number, max: number): number => {
+        return Math.random() * (max - min) + min;
+    }
+
+    /**
+     * 下雪
+     */
+    const snowPlay = useCallback(() => {
+        const snow = new PlaneGeometry(1, 1); //矩形平面
+        const texture = ImageUtils.loadTexture(snowImg); //加载纹理贴图
+        texture.repeat.set(1, 1);
+        const meshBasicMater = new MeshLambertMaterial({ map: texture, side: DoubleSide, transparent: true });
+        for (let i = 0; i < 1000; i++) {
+            snowTexture(snow, meshBasicMater)
+        }
+    }, [])
+
+    /**
+     * 雪花
+     */
+    const snowTexture = (snow: PlaneGeometry, meshBasicMater: MeshLambertMaterial) => {
+        const mesh: any = new Mesh(snow, meshBasicMater);
+        mesh.name = 'snow'
+        mesh.receiveShadow = true;
+        const x = randomRange(-50, 50);
+        const y = randomRange(20, 35);
+        const z = randomRange(-50, 50);
+        const xSpeed = randomRange(-0.1, 0.1)
+        const ySpeed = randomRange(0.1, 0.3)
+        const zSpeed = randomRange(-0.1, 0.1)
+        mesh.position.set(x, y, z);
+        mesh.baseInfo = {
+            originX: x,
+            originY: y,
+            originZ: z,
+            xSpeed,
+            ySpeed,
+            zSpeed
+        }
+        meshes.push(mesh);
+        scene.add(mesh);
+    }
 
     /**
      * 初始化
@@ -147,10 +210,10 @@ function Loader() {
             textureImage: starPlane
         });
         loaderFbx();
+        snowPlay();
         renderScene();
         return () => {
             cancelAnimationFrame(raf.current!);
-
             lights.forEach((item) => {
                 scene.remove(item);
             })
