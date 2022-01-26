@@ -14,7 +14,6 @@ import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
 import planeTexture from '../../assets/images/plane.jpg';
 import starPlane from '../../assets/images/starPlane.gif';
-import yangMp3 from '../../assets/videos/yang.mp3';
 
 interface CreateFloorProps {
     position: { x: number; y: number; z: number };
@@ -162,7 +161,7 @@ function Loader() {
     return (
         <div className={styles.rect_box}>
             <div className={styles.three_box} ref={body}></div>
-            <audio src={yangMp3} loop ref={audioRef}></audio>
+            <audio src='https://cdn2.mihuiai.com/yang.mp3' loop ref={audioRef}></audio>
             {
                 !isLoadSuccess && (
                     <div className={styles.model_progress}>模型文件稍大，请耐心等待，模型加载中...</div>
