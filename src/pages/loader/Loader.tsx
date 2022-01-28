@@ -12,16 +12,17 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader';
-import planeTexture from '../../assets/images/plane.jpg';
-import starPlane from '../../assets/images/starPlane.gif';
+import starPlane from '../../assets/images/starPlane.jpg';
+import ceiling from '../../assets/images/ceiling.jpg';
 import snowImg from '../../assets/images/snow.png';
 
 interface CreateFloorProps {
     position: { x: number; y: number; z: number };
-    rotate: number;
+    rotateX?: number;
+    rotateY?: number;
     width: number;
     height: number;
-    textureImage?: string;
+    textureImage: string;
 }
 
 function Loader() {
@@ -35,6 +36,7 @@ function Loader() {
     const mixer = useRef<any>();
     const audioRef = useRef<any>();
     const meshes = useRef<any[]>([]).current;
+    const snowClass = useRef<any[]>([]).current;
 
     const [isLoadSuccess, setIsLoadSuccess] = useState<boolean>(false);
 
@@ -52,7 +54,7 @@ function Loader() {
         camera.fov = 45;
         camera.near = 1;
         camera.far = 1000;
-        camera.position.set(0, 30, 50);
+        camera.position.set(0, 40, 100);
         camera.lookAt(0, 0, 0);
         camera.updateProjectionMatrix();
     }, [render, body])
@@ -74,11 +76,14 @@ function Loader() {
         meshes.forEach((item, index) => {
             if (item.name === 'snow') {
                 const { x, y, z } = item.position;
-                const { originX, originY, originZ, xSpeed, ySpeed, zSpeed } = item.baseInfo;
+                const { xSpeed, ySpeed, zSpeed, xRotate, yRotate } = item.baseInfo;
                 if (y > 0) {
                     item.position.set(x - xSpeed, y - ySpeed, z - zSpeed);
+                    item.rotation.x += xRotate;
+                    item.rotation.y += yRotate;
                 } else {
-                    item.position.set(originX, originY, originZ);
+                    // 当y<0说明雪花落地了，初始化数据
+                    snowClass[index].init();
                 }
             }
         })
@@ -92,14 +97,15 @@ function Loader() {
     /**
      * 创建地板
      */
-    const createFloor = useCallback(({ position, rotate, width, height, textureImage }: CreateFloorProps) => {
+    const createFloor = useCallback(({ position, rotateX, rotateY, width, height, textureImage }: CreateFloorProps) => {
         const plane = new PlaneGeometry(width, height); //矩形平面
-        const texture = ImageUtils.loadTexture(textureImage || planeTexture); //加载纹理贴图
+        const texture = ImageUtils.loadTexture(textureImage); //加载纹理贴图
         const meshBasicMater = new MeshLambertMaterial({ map: texture, side: DoubleSide });
         const mesh = new Mesh(plane, meshBasicMater);
         mesh.receiveShadow = true;
         mesh.position.set(position.x, position.y, position.z);
-        mesh.rotation.x = rotate / 180 * Math.PI;
+        mesh.rotation.x = (rotateX || 0) / 180 * Math.PI;
+        mesh.rotation.y = (rotateY || 0) / 180 * Math.PI;
         scene.add(mesh);
     }, [])
 
@@ -130,7 +136,7 @@ function Loader() {
         const loader = new FBXLoader();
         loader.load('https://cdn2.mihuiai.com/monsterModel.fbx', (obj) => {
             obj.position.set(0, 0, 0);
-            obj.scale.set(0.1, 0.1, 0.1);
+            obj.scale.set(0.2, 0.2, 0.2);
             mixer.current = new AnimationMixer(obj);
             const animated = mixer.current.clipAction(obj.animations[1]);
             animated.setLoop(true);
@@ -158,34 +164,46 @@ function Loader() {
         texture.repeat.set(1, 1);
         const meshBasicMater = new MeshLambertMaterial({ map: texture, side: DoubleSide, transparent: true });
         for (let i = 0; i < 1000; i++) {
-            snowTexture(snow, meshBasicMater)
+            const snowTexture = new SnowTexture(snow, meshBasicMater);
+            snowClass.push(snowTexture)
         }
     }, [])
 
     /**
      * 雪花
      */
-    const snowTexture = (snow: PlaneGeometry, meshBasicMater: MeshLambertMaterial) => {
-        const mesh: any = new Mesh(snow, meshBasicMater);
-        mesh.name = 'snow'
-        mesh.receiveShadow = true;
-        const x = randomRange(-50, 50);
-        const y = randomRange(20, 35);
-        const z = randomRange(-50, 50);
-        const xSpeed = randomRange(-0.1, 0.1)
-        const ySpeed = randomRange(0.1, 0.3)
-        const zSpeed = randomRange(-0.1, 0.1)
-        mesh.position.set(x, y, z);
-        mesh.baseInfo = {
-            originX: x,
-            originY: y,
-            originZ: z,
-            xSpeed,
-            ySpeed,
-            zSpeed
+    class SnowTexture {
+        mesh: any;
+        constructor(snow: PlaneGeometry, meshBasicMater: MeshLambertMaterial) {
+            this.mesh = new Mesh(snow, meshBasicMater);
+            this.mesh.name = 'snow'
+            this.mesh.receiveShadow = true;
+            this.init();
+            meshes.push(this.mesh);
+            scene.add(this.mesh);
         }
-        meshes.push(mesh);
-        scene.add(mesh);
+        init() {
+            const x = randomRange(-50, 50);
+            const y = randomRange(40, 50);
+            const z = randomRange(-50, 50);
+            const xSpeed = randomRange(-0.1, 0.1)
+            const ySpeed = randomRange(0.1, 0.3)
+            const zSpeed = randomRange(-0.1, 0.1)
+            const xRotate = randomRange(0, 0.1);
+            const yRotate = randomRange(0, 0.5);
+            this.mesh.position.set(x, y, z);
+            this.mesh.baseInfo = {
+                originX: x,
+                originY: y,
+                originZ: z,
+                xSpeed,
+                ySpeed,
+                zSpeed,
+                xRotate,
+                yRotate
+            }
+
+        }
     }
 
     /**
@@ -196,18 +214,37 @@ function Loader() {
         init();
         initControls();
         createLight();
+        // 地板
         createFloor({
             position: { x: 0, y: 0, z: 0 },
-            rotate: -90,
+            rotateX: -90,
             width: 100,
             height: 100,
+            textureImage: ceiling
         });
+        // 背景板
         createFloor({
-            position: { x: 0, y: 15, z: -50 },
-            rotate: 0,
+            position: { x: 0, y: 30, z: -50 },
+            rotateX: 0,
             width: 100,
-            height: 30,
+            height: 60,
             textureImage: starPlane
+        });
+        // 左侧墙板
+        createFloor({
+            position: { x: -50, y: 30, z: 0 },
+            rotateY: -90,
+            width: 100,
+            height: 60,
+            textureImage: ceiling
+        });
+        // 右侧墙板
+        createFloor({
+            position: { x: 50, y: 30, z: 0 },
+            rotateY: -90,
+            width: 100,
+            height: 60,
+            textureImage: ceiling
         });
         loaderFbx();
         snowPlay();
